@@ -30,8 +30,8 @@ jobs:
       matrix:
         python: ["3.10", "3.13"]
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
       - name: Compile
@@ -48,10 +48,10 @@ jobs:
     outputs:
       qmk_sha: ${{ steps.build.outputs.qmk_sha }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           path: tools
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           repository: jpsutton/qmk_firmware
           ref: ${{ inputs.qmk_ref || 'mk-typist' }}
@@ -68,7 +68,7 @@ jobs:
           echo "qmk_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - name: Check the image the way cykb.py flash would
         run: python3 tools/cykb.py check qmk_firmware/mk_typist_default.bin
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: firmware
           path: qmk_firmware/mk_typist_default.bin
