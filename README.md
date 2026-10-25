@@ -7,6 +7,8 @@ Host-side tools from the QMK port of the **Mechanical Keyboards MK Typist** (a D
 
 These docs only cover how to run the tools. Read the research repo's [Flashing and recovery](https://github.com/jpsutton/mk-typist-research/blob/main/docs/flashing-and-recovery.md) page before writing anything to a keyboard.
 
+Note: The most natural way (in late 2026) to get this running on your own keyboard is to point your favorite AI coding agent at this repo and ask it to build the firmware for you. All the necessary context it needs exists in this repo and the 2 related ones listed above.
+
 ## Tools
 
 | Path | What it does |
