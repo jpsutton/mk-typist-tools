@@ -65,6 +65,35 @@ Requirements: Linux, Python 3.10 or newer (standard library only), and Docker fo
 
 To go back to stock, flash `stock/0301-US_Layout-V1.00.05-app.bin` the same way.
 
+## Ducky One 2 (UNTESTED)
+
+> [!WARNING]
+> **Nobody has run this firmware on a Ducky One 2.** Everything below comes from static analysis of Ducky's updaters, not from a real board. If it goes wrong, you can lose the stock bootloader for good, and there is no public backup of it. Only try this if you accept that risk.
+
+**Why we think it might work.** The Typist is built on a Ducky One 2 PCB (DK11-ONE02). Ducky's own full-size One 2 updaters (non-backlit DKON1808 and backlit DKON1808S, V1.01.01) use the same Cheng Yong firmware platform. Their keymap table, matrix pins, LED driver pins, SPI flash pins, load address and bootloader header are byte-identical to the Typist's. Details: research repo, [Related boards](https://github.com/jpsutton/mk-typist-research/blob/main/docs/related-boards.md#ducky-one-2-full-size).
+
+**What it does not cover:**
+
+- Any One 2 other than the full-size DKON1808 and DKON1808S. The RGB model has no public firmware to compare. The Mini and SF use a different MCU, and the TKL was not checked.
+- Older or regional production runs, which may differ.
+- The One 2's bootloader itself. It is not in the updater, so it has never been seen.
+- The ISO (EU) extra key. The firmware only has the ANSI layout.
+- The backlight. Only the Typist's 4 indicator positions are driven.
+
+**If you try it, run the read-only checks first** and stop at the first surprise:
+
+1. `lsusb` shows `04d9:0296`.
+2. `./cykb.py extract One2_NonBacklit_V1.01.01.exe one2/` (or the backlit updater, from [Ducky's downloads page](https://ducky.global/pages/downloads)). This also gives you the stock image for going back.
+3. Enter the bootloader with `./cykb.py reboot-bl`. It should show up as `04d9:1296`.
+4. `./cykb.py info` should report firmware offset 0x200 and page size 0x200.
+5. `./cykb.py sum one2/0296-US_Layout-V1.01.01-app.bin` should print `MATCH`. That proves the bootloader takes the same commands and encoding, assuming your board runs V1.01.01.
+
+Only after all five pass, flash the release firmware with the **One 2's** version page, `one2/0296-US_Layout-V1.01.01-version.bin`. The tool warns that the One 2 is untested. Under QMK the board shows up as `4d4b:5459` "MK Typist". Esc at plug-in or Fn+Esc returns to the bootloader, if the matrix really is the same.
+
+The worst case is firmware that starts but has a wrong matrix or broken USB. Then neither key combo reaches the bootloader. The only way out is the Holtek ROM ISP mass erase, which deletes the stock bootloader. `patch_dump.py` only knows the Typist's stock firmware, so it cannot back up a One 2's bootloader first.
+
+Please open an issue with your results, good or bad.
+
 ## Other commands
 
 ```sh
@@ -84,7 +113,7 @@ sudo ./keytest.py qmk_firmware/keyboards/mk/typist keytest.log
 ## Status
 
 - Tested on one MK Typist with stock V1.00.05. `cykb.py` was cleaned up for publishing after that testing. Its protocol code is unchanged, but the new checks and the `extract` command have only been tested offline against the vendor updaters.
-- Ducky One 2 IDs (`04d9:0296` and `04d9:1296`) are recognised but untested. See the research repo's [Related boards](https://github.com/jpsutton/mk-typist-research/blob/main/docs/related-boards.md#ducky-one-2-full-size) page before trying one.
+- Ducky One 2 IDs (`04d9:0296` and `04d9:1296`) are recognised but untested. See [Ducky One 2 (UNTESTED)](#ducky-one-2-untested).
 - Linux only.
 
 ## Credits and license

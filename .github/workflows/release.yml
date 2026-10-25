@@ -56,5 +56,12 @@ jobs:
           | Tools source | [${GITHUB_SHA:0:10}](https://github.com/$GITHUB_REPOSITORY/tree/$GITHUB_SHA) |
 
           Flash it with \`cykb.py\` through the stock bootloader, as described in the [README](https://github.com/$GITHUB_REPOSITORY/blob/$GITHUB_SHA/README.md#flash-qmk). You still need the version page from the vendor updater (\`cykb.py extract\`). Tested on one MK Typist with stock V1.00.05; read the research repo's [Flashing and recovery](https://github.com/jpsutton/mk-typist-research/blob/main/docs/flashing-and-recovery.md) page first.
+
+          ### Ducky One 2: UNTESTED
+
+          > [!WARNING]
+          > **This firmware has never been run on a Ducky One 2.** It may work on the full-size One 2 (non-backlit DKON1808, backlit DKON1808S), because Ducky's updaters for those boards match the Typist's matrix pins, keymap and bootloader header byte for byte. That is static analysis only. Nobody has seen the One 2's bootloader, and a failure can cost you the stock bootloader permanently, with no public backup. ISO keys and the backlight are not supported. The RGB, TKL, Mini and SF models are not covered at all.
+          >
+          > If you try it anyway, run the read-only checks and use the One 2's own version page, as described in [Ducky One 2 (UNTESTED)](https://github.com/$GITHUB_REPOSITORY/blob/$GITHUB_SHA/README.md#ducky-one-2-untested). Please report results in an issue.
           NOTES
           gh release create "$version" dist/* --target "$GITHUB_SHA" --title "$version" --notes-file notes.md
