@@ -1,0 +1,4 @@
+*.bin
+*.exe
+__pycache__/
+usb-captures/

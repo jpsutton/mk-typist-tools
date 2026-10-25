@@ -1,0 +1,6 @@
+# MK Typist (and Ducky One 2): give the logged-in user access to the stock application's
+# and stock IAP's vendor HID interface, and to the Holtek ROM ISP (libusb).
+# Install: sudo cp 50-mk-typist.rules /etc/udev/rules.d/
+#          sudo udevadm control --reload && sudo udevadm trigger, then replug.
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="04d9", ATTRS{idProduct}=="0301|1301|0296|1296", TAG+="uaccess"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="04d9", ATTRS{idProduct}=="8010", TAG+="uaccess"
