@@ -1,0 +1,60 @@
+name: Release
+
+# Builds the QMK firmware and publishes a GitHub release named after the UTC date (YYYYMMDD).
+# Run it from the Actions tab. Only one release per day; a second run on the same day fails.
+
+on:
+  workflow_dispatch:
+    inputs:
+      qmk_ref:
+        description: Branch, tag or commit of jpsutton/qmk_firmware to build
+        default: mk-typist
+
+concurrency:
+  group: release
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+    with:
+      qmk_ref: ${{ inputs.qmk_ref }}
+
+  release:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: firmware
+          path: dist
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          QMK_SHA: ${{ needs.ci.outputs.qmk_sha }}
+        run: |
+          version="$(date -u +%Y%m%d)"
+          if gh release view "$version" >/dev/null 2>&1; then
+            echo "::error::Release $version already exists. Delete it first or wait until tomorrow (UTC)."
+            exit 1
+          fi
+          mv dist/mk_typist_default.bin "dist/mk_typist_default-$version.bin"
+          (cd dist && sha256sum ./*.bin | sed 's| \./| |' > SHA256SUMS)
+          cat > notes.md <<NOTES
+          QMK firmware for the MK Typist, keymap \`default\`, and the host tools at this commit.
+
+          | | |
+          | --- | --- |
+          | Firmware | \`mk_typist_default-$version.bin\` |
+          | SHA-256 | \`$(cut -d' ' -f1 dist/SHA256SUMS)\` |
+          | QMK source | [jpsutton/qmk_firmware@${QMK_SHA:0:10}](https://github.com/jpsutton/qmk_firmware/tree/$QMK_SHA) |
+          | Tools source | [${GITHUB_SHA:0:10}](https://github.com/$GITHUB_REPOSITORY/tree/$GITHUB_SHA) |
+
+          Flash it with \`cykb.py\` through the stock bootloader, as described in the [README](https://github.com/$GITHUB_REPOSITORY/blob/$GITHUB_SHA/README.md#flash-qmk). You still need the version page from the vendor updater (\`cykb.py extract\`). Tested on one MK Typist with stock V1.00.05; read the research repo's [Flashing and recovery](https://github.com/jpsutton/mk-typist-research/blob/main/docs/flashing-and-recovery.md) page first.
+          NOTES
+          gh release create "$version" dist/* --target "$GITHUB_SHA" --title "$version" --notes-file notes.md

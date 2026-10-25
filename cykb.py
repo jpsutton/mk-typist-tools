@@ -14,6 +14,7 @@ Commands:
   version                               read-only, stock app only: version page 0x3000..0x31DF
   sum <image.bin>                       read-only, IAP only: compare flash sum/CRC with an image
   extract <updater.exe> <out-dir>       offline: application images and version pages
+  check <image.bin> [version.bin]       offline: run the pre-flash checks on files
   reboot-bl                             app -> IAP (stock app; QMK uses Fn+Esc or Esc at plug-in)
   reboot-fw                             IAP -> app
   flash <image.bin> <version.bin> [--yes]
@@ -293,6 +294,12 @@ def main(argv):
 
     if op == "extract":
         return extract(*args[:2])
+    if op == "check":
+        check_image(load(args[0]))
+        if len(args) > 1:
+            pid = check_version_page(load(args[1]))
+            print(f"version page names app PID {pid:04x}")
+        return print("OK")
 
     dev = Cykb()
     print(f"device {dev.path}: {dev.product} {dev.mode} ({VID:04x}:{dev.pid:04x})")

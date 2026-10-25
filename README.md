@@ -34,7 +34,7 @@ Requirements: Linux, Python 3.10 or newer (standard library only), and Docker fo
    sudo udevadm control --reload && sudo udevadm trigger
    ```
 
-2. Build the firmware:
+2. Download `mk_typist_default-YYYYMMDD.bin` from [Releases](https://github.com/jpsutton/mk-typist-tools/releases) and check it against `SHA256SUMS`. Or build the firmware yourself:
 
    ```sh
    git clone --recurse-submodules -b mk-typist https://github.com/jpsutton/qmk_firmware.git
@@ -68,12 +68,18 @@ To go back to stock, flash `stock/0301-US_Layout-V1.00.05-app.bin` the same way.
 ## Other commands
 
 ```sh
+./cykb.py check image.bin version.bin  # offline: run the pre-flash checks
 ./cykb.py version                      # stock app only: show the version page
 ./cykb.py sum stock/0301-…-app.bin     # IAP only: is this image what is installed? (read-only)
 ./patch_dump.py stock/0301-…-app.bin dumpread.bin
 ./cykb.py dump flash.bin               # after flashing dumpread.bin: read 0x0..0x1FDFF
 sudo ./keytest.py qmk_firmware/keyboards/mk/typist keytest.log
 ```
+
+## CI and releases
+
+- **CI** (`.github/workflows/ci.yml`) runs on every push and pull request. It runs the unit tests on Python 3.10 and 3.13 and ShellCheck. It also builds `mk/typist:default` from `jpsutton/qmk_firmware@mk-typist` in the QMK CLI container and runs `cykb.py check` on the result.
+- **Release** (`.github/workflows/release.yml`) is started by hand from the Actions tab. It runs CI, then publishes a release tagged with the UTC date (`YYYYMMDD`) containing the firmware and `SHA256SUMS`. The release notes link the exact QMK and tools commits. One release per day; a second run on the same day fails.
 
 ## Status
 

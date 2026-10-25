@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      qmk_ref:
+        description: Branch, tag or commit of jpsutton/qmk_firmware to build
+        default: mk-typist
+  workflow_call:
+    inputs:
+      qmk_ref:
+        type: string
+        default: mk-typist
+    outputs:
+      qmk_sha:
+        description: Commit of jpsutton/qmk_firmware the firmware was built from
+        value: ${{ jobs.firmware.outputs.qmk_sha }}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Lint and test (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Compile
+        run: python -m py_compile cykb.py patch_dump.py keytest.py ghidra/resolve_literals.py
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+      - name: ShellCheck
+        run: shellcheck scripts/*.sh
+
+  firmware:
+    name: Build QMK firmware
+    runs-on: ubuntu-latest
+    container: ghcr.io/qmk/qmk_cli:latest
+    outputs:
+      qmk_sha: ${{ steps.build.outputs.qmk_sha }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: tools
+      - uses: actions/checkout@v5
+        with:
+          repository: jpsutton/qmk_firmware
+          ref: ${{ inputs.qmk_ref || 'mk-typist' }}
+          path: qmk_firmware
+          submodules: recursive
+      - name: Compile mk/typist:default
+        id: build
+        working-directory: qmk_firmware
+        env:
+          QMK_HOME: ${{ github.workspace }}/qmk_firmware
+        run: |
+          git config --global --add safe.directory '*'
+          qmk compile -kb mk/typist -km default
+          echo "qmk_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Check the image the way cykb.py flash would
+        run: python3 tools/cykb.py check qmk_firmware/mk_typist_default.bin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: qmk_firmware/mk_typist_default.bin
+          if-no-files-found: error
